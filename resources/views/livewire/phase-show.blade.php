@@ -162,47 +162,69 @@
             $half = (int) ceil($total / 2);
             $leftMatches = $matchs->slice(0, $half);
             $rightMatches = $matchs->slice($half)->values();
+            $flagClasses = [
+                'MEX' => 'fi-mx', 'RSA' => 'fi-za', 'KOR' => 'fi-kr', 'DEN' => 'fi-dk',
+                'CAN' => 'fi-ca', 'QAT' => 'fi-qa', 'SUI' => 'fi-ch', 'ITA' => 'fi-it',
+                'BRA' => 'fi-br', 'MAR' => 'fi-ma', 'HAI' => 'fi-ht', 'SCO' => 'fi-gb',
+                'USA' => 'fi-us', 'PAR' => 'fi-py', 'AUS' => 'fi-au', 'TUR' => 'fi-tr',
+                'GER' => 'fi-de', 'CUW' => 'fi-cw', 'CIV' => 'fi-ci', 'ECU' => 'fi-ec',
+                'NED' => 'fi-nl', 'JPN' => 'fi-jp', 'TUN' => 'fi-tn', 'UKR' => 'fi-ua',
+                'BEL' => 'fi-be', 'EGY' => 'fi-eg', 'IRN' => 'fi-ir', 'NZL' => 'fi-nz',
+                'ESP' => 'fi-es', 'CPV' => 'fi-cv', 'KSA' => 'fi-sa', 'URU' => 'fi-uy',
+                'BOL' => 'fi-bo', 'FRA' => 'fi-fr', 'SEN' => 'fi-sn', 'NOR' => 'fi-no',
+                'ARG' => 'fi-ar', 'ALG' => 'fi-dz', 'AUT' => 'fi-at', 'JOR' => 'fi-jo',
+                'NCL' => 'fi-nc', 'POR' => 'fi-pt', 'UZB' => 'fi-uz', 'COL' => 'fi-co',
+                'ENG' => 'fi-gb', 'CRO' => 'fi-hr', 'GHA' => 'fi-gh', 'PAN' => 'fi-pa',
+            ];
         @endphp
 
         <div class="row g-3">
-            <div class="col-12 mb-2">
-                <h2 class="h5 mb-0">Tableau des matchs</h2>
-                <p class="text-muted small mb-0">
-                    Visualisation en mode bracket inspirée d'un arbre de tournoi. Chaque carton représente un match.
-                </p>
-            </div>
-
             <div class="col-12 col-lg-6">
                 @forelse($leftMatches as $match)
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body py-2">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-semibold">
-                                        {{ $match->equipeA->nom ?? 'Équipe A' }}
-                                        <span class="text-muted">vs</span>
-                                        {{ $match->equipeB->nom ?? 'Équipe B' }}
+                    @php
+                        $isBarrageA = $match->equipeA && str_contains($match->equipeA->nom ?? '', '/');
+                        $isBarrageB = $match->equipeB && str_contains($match->equipeB->nom ?? '', '/');
+                        $flagA = !$isBarrageA && $match->equipeA && $match->equipeA->code_pays ? ($flagClasses[$match->equipeA->code_pays] ?? null) : null;
+                        $flagB = !$isBarrageB && $match->equipeB && $match->equipeB->code_pays ? ($flagClasses[$match->equipeB->code_pays] ?? null) : null;
+                    @endphp
+                    <a href="{{ route('matchs.show', $match) }}" class="text-decoration-none text-dark d-block">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">
+                                            @if($isBarrageA)
+                                                <span class="me-1" title="Barrages">⚔️</span>
+                                            @elseif($flagA)
+                                                <span class="fi {{ $flagA }} me-1"></span>
+                                            @endif
+                                            {{ $match->equipeA->nom ?? 'Équipe A' }}
+                                            <span class="text-muted">vs</span>
+                                            @if($isBarrageB)
+                                                <span class="me-1" title="Barrages">⚔️</span>
+                                            @elseif($flagB)
+                                                <span class="fi {{ $flagB }} me-1"></span>
+                                            @endif
+                                            {{ $match->equipeB->nom ?? 'Équipe B' }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                        </div>
                                     </div>
-                                    <div class="small text-muted">
-                                        {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                    <div class="text-end">
+                                        <div class="fw-bold">
+                                            {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
+                                        </div>
+                                        <div class="small">
+                                            <span class="badge text-bg-secondary">
+                                                {{ $match->statut_libelle }}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold">
-                                        {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
-                                    </div>
-                                    <div class="small">
-                                        <span class="badge text-bg-secondary text-capitalize">
-                                            {{ $match->statut }}
-                                        </span>
-                                    </div>
-                                    <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-xs mt-1">
-                                        Détail
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 @empty
                     <p class="text-muted">Aucun match n'est encore planifié pour cette phase.</p>
                 @endforelse
@@ -210,35 +232,50 @@
 
             <div class="col-12 col-lg-6">
                 @foreach($rightMatches as $match)
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body py-2">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-semibold">
-                                        {{ $match->equipeA->nom ?? 'Équipe A' }}
-                                        <span class="text-muted">vs</span>
-                                        {{ $match->equipeB->nom ?? 'Équipe B' }}
+                    @php
+                        $isBarrageA = $match->equipeA && str_contains($match->equipeA->nom ?? '', '/');
+                        $isBarrageB = $match->equipeB && str_contains($match->equipeB->nom ?? '', '/');
+                        $flagA = !$isBarrageA && $match->equipeA && $match->equipeA->code_pays ? ($flagClasses[$match->equipeA->code_pays] ?? null) : null;
+                        $flagB = !$isBarrageB && $match->equipeB && $match->equipeB->code_pays ? ($flagClasses[$match->equipeB->code_pays] ?? null) : null;
+                    @endphp
+                    <a href="{{ route('matchs.show', $match) }}" class="text-decoration-none text-dark d-block">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-semibold">
+                                            @if($isBarrageA)
+                                                <span class="me-1" title="Barrages">⚔️</span>
+                                            @elseif($flagA)
+                                                <span class="fi {{ $flagA }} me-1"></span>
+                                            @endif
+                                            {{ $match->equipeA->nom ?? 'Équipe A' }}
+                                            <span class="text-muted">vs</span>
+                                            @if($isBarrageB)
+                                                <span class="me-1" title="Barrages">⚔️</span>
+                                            @elseif($flagB)
+                                                <span class="fi {{ $flagB }} me-1"></span>
+                                            @endif
+                                            {{ $match->equipeB->nom ?? 'Équipe B' }}
+                                        </div>
+                                        <div class="small text-muted">
+                                            {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                        </div>
                                     </div>
-                                    <div class="small text-muted">
-                                        {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                    <div class="text-end">
+                                        <div class="fw-bold">
+                                            {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
+                                        </div>
+                                        <div class="small">
+                                            <span class="badge text-bg-secondary">
+                                                {{ $match->statut_libelle }}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-bold">
-                                        {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
-                                    </div>
-                                    <div class="small">
-                                        <span class="badge text-bg-secondary text-capitalize">
-                                            {{ $match->statut }}
-                                        </span>
-                                    </div>
-                                    <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-xs mt-1">
-                                        Détail
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 @endforeach
             </div>
         </div>

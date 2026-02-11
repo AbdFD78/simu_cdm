@@ -1,4 +1,21 @@
 <div>
+    @php
+        $flagClasses = [
+            'MEX' => 'fi-mx', 'RSA' => 'fi-za', 'KOR' => 'fi-kr', 'DEN' => 'fi-dk',
+            'CAN' => 'fi-ca', 'QAT' => 'fi-qa', 'SUI' => 'fi-ch', 'ITA' => 'fi-it',
+            'BRA' => 'fi-br', 'MAR' => 'fi-ma', 'HAI' => 'fi-ht', 'SCO' => 'fi-gb',
+            'USA' => 'fi-us', 'PAR' => 'fi-py', 'AUS' => 'fi-au', 'TUR' => 'fi-tr',
+            'GER' => 'fi-de', 'CUW' => 'fi-cw', 'CIV' => 'fi-ci', 'ECU' => 'fi-ec',
+            'NED' => 'fi-nl', 'JPN' => 'fi-jp', 'TUN' => 'fi-tn', 'UKR' => 'fi-ua',
+            'BEL' => 'fi-be', 'EGY' => 'fi-eg', 'IRN' => 'fi-ir', 'NZL' => 'fi-nz',
+            'ESP' => 'fi-es', 'CPV' => 'fi-cv', 'KSA' => 'fi-sa', 'URU' => 'fi-uy',
+            'BOL' => 'fi-bo', 'FRA' => 'fi-fr', 'SEN' => 'fi-sn', 'NOR' => 'fi-no',
+            'ARG' => 'fi-ar', 'ALG' => 'fi-dz', 'AUT' => 'fi-at', 'JOR' => 'fi-jo',
+            'NCL' => 'fi-nc', 'POR' => 'fi-pt', 'UZB' => 'fi-uz', 'COL' => 'fi-co',
+            'ENG' => 'fi-gb', 'CRO' => 'fi-hr', 'GHA' => 'fi-gh', 'PAN' => 'fi-pa',
+        ];
+    @endphp
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="h3 mb-0">Poule {{ $poule->nom }}</h1>
@@ -34,9 +51,21 @@
                             </thead>
                             <tbody>
                             @forelse($classements as $index => $classement)
+                                @php
+                                    $equipe = $classement->equipe;
+                                    $isPlayoff = $equipe && str_contains($equipe->nom ?? '', '/');
+                                    $flagClass = !$isPlayoff && $equipe && $equipe->code_pays ? ($flagClasses[$equipe->code_pays] ?? null) : null;
+                                @endphp
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
-                                    <td>{{ $classement->equipe->nom ?? 'N/A' }}</td>
+                                    <td>
+                                        @if($isPlayoff)
+                                            <span class="me-2" title="Barrages">⚔️</span>
+                                        @elseif($flagClass)
+                                            <span class="fi {{ $flagClass }} me-2"></span>
+                                        @endif
+                                        {{ $classement->equipe->nom ?? 'N/A' }}
+                                    </td>
                                     <td class="text-center">{{ $classement->points }}</td>
                                     <td class="text-center">{{ $classement->matchs_joues }}</td>
                                     <td class="text-center">{{ $classement->victoires }}</td>
@@ -86,31 +115,47 @@
                                 <th class="text-center">Score</th>
                                 <th class="text-center">Statut</th>
                                 <th class="text-center">Date / heure</th>
-                                <th></th>
+                                <th class="text-end"></th>
                             </tr>
                             </thead>
                             <tbody>
                             @forelse($matchs as $match)
-                                <tr>
+                                @php
+                                    $isBarrageA = $match->equipeA && str_contains($match->equipeA->nom ?? '', '/');
+                                    $isBarrageB = $match->equipeB && str_contains($match->equipeB->nom ?? '', '/');
+                                    $flagA = !$isBarrageA && $match->equipeA && $match->equipeA->code_pays ? ($flagClasses[$match->equipeA->code_pays] ?? null) : null;
+                                    $flagB = !$isBarrageB && $match->equipeB && $match->equipeB->code_pays ? ($flagClasses[$match->equipeB->code_pays] ?? null) : null;
+                                @endphp
+                                <tr role="button" tabindex="0" onclick="window.location='{{ route('matchs.show', $match) }}'" style="cursor: pointer;">
                                     <td>
+                                        @if($isBarrageA)
+                                            <span class="me-1" title="Barrages">⚔️</span>
+                                        @elseif($flagA)
+                                            <span class="fi {{ $flagA }} me-1"></span>
+                                        @endif
                                         {{ $match->equipeA->nom ?? 'Équipe A' }}
                                         vs
+                                        @if($isBarrageB)
+                                            <span class="me-1" title="Barrages">⚔️</span>
+                                        @elseif($flagB)
+                                            <span class="fi {{ $flagB }} me-1"></span>
+                                        @endif
                                         {{ $match->equipeB->nom ?? 'Équipe B' }}
                                     </td>
                                     <td class="text-center">
                                         {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge text-bg-secondary text-capitalize">
-                                            {{ $match->statut }}
+                                        <span class="badge text-bg-secondary">
+                                            {{ $match->statut_libelle }}
                                         </span>
                                     </td>
                                     <td class="text-center">
                                         {{ optional($match->date_heure)->format('d/m/Y H:i') ?? '—' }}
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" onclick="event.stopPropagation();">
                                         <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-sm">
-                                            Détail
+                                            Voir
                                         </a>
                                     </td>
                                 </tr>

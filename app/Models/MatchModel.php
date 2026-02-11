@@ -56,5 +56,16 @@ class MatchModel extends Model
     {
         return $this->hasMany(EvenementMatch::class, 'match_id');
     }
+
+    /** Libellé du statut en français pour l'affichage */
+    public function getStatutLibelleAttribute(): string
+    {
+        return match ($this->statut) {
+            'scheduled' => 'À venir',
+            'live' => 'En direct',
+            'finished' => 'Terminé',
+            default => (string) $this->statut,
+        };
+    }
 }
 

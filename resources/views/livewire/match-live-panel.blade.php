@@ -63,15 +63,15 @@
                         <div class="d-flex align-items-start gap-3">
                             {{-- Icône et description à gauche --}}
                             <div class="flex-grow-1">
-                                <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="d-flex align-items-center mb-1">
                                     @if($evenement->type === 'goal')
-                                        <span style="font-size: 1.2em;">⚽</span>
+                                        <span class="me-3" style="font-size: 1.2em; min-width: 28px; text-align: center;">⚽</span>
                                     @elseif($evenement->type === 'yellow_card')
-                                        <span class="badge text-bg-warning" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">⚠</span>
+                                        <span class="badge text-bg-warning me-3" style="width: 24px; height: 24px; min-width: 24px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">🟨</span>
                                     @elseif($evenement->type === 'red_card')
-                                        <span class="badge text-bg-danger" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">🟥</span>
+                                        <span class="badge text-bg-danger me-3" style="width: 24px; height: 24px; min-width: 24px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">🟥</span>
                                     @elseif($evenement->type === 'substitution')
-                                        <span style="font-size: 1.1em;">🔄</span>
+                                        <span class="me-3" style="font-size: 1.1em; min-width: 28px; text-align: center;">🔄</span>
                                     @endif
 
                                     <span class="fw-semibold">
