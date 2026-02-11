@@ -2,10 +2,10 @@
     @if($match->statut === 'live' || $isSimulating)
         {{-- Activer le polling toutes les 5 secondes quand le match est en cours --}}
         <div wire:poll.5s="updateMatch">
-            <div class="alert alert-info mb-3">
-                <strong>Match en direct</strong> &mdash; Mise à jour automatique toutes les 5 secondes
+            <div class="alert alert-info mb-3 d-flex justify-content-between align-items-center">
+                <span class="badge text-bg-danger">En cours</span>
                 @if($isSimulating)
-                    <br><small>Simulation en cours (30 secondes)...</small>
+                    <span class="fw-bold">{{ $currentMinute }}'</span>
                 @endif
             </div>
         </div>
@@ -19,7 +19,10 @@
                     Lancer la simulation (30s)
                 </button>
             @elseif($match->statut === 'live' || $isSimulating)
-                <span class="badge text-bg-danger">En cours</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge text-bg-danger">En cours</span>
+                    <span class="fw-bold">{{ $currentMinute }}'</span>
+                </div>
             @endif
         </div>
 
@@ -46,32 +49,44 @@
         @if($evenements->isEmpty())
             <p class="text-muted mb-0">Aucun événement pour le moment.</p>
         @else
-            <div class="list-group">
-                @foreach($evenements as $evenement)
-                    <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
+            {{-- Timeline stylée avec ligne verticale centrale --}}
+            <div class="position-relative" style="padding-left: 60px;">
+                {{-- Ligne verticale centrale --}}
+                <div class="position-absolute top-0 start-0" style="width: 2px; height: 100%; background-color: #dee2e6; left: 30px;"></div>
+
+                @foreach($evenements as $index => $evenement)
+                    <div class="position-relative mb-3" style="min-height: 50px;">
+                        {{-- Point sur la ligne centrale --}}
+                        <div class="position-absolute rounded-circle bg-primary" style="width: 12px; height: 12px; left: 24px; top: 4px; border: 2px solid white; box-shadow: 0 0 0 2px #dee2e6;"></div>
+
+                        {{-- Contenu de l'événement --}}
+                        <div class="d-flex align-items-start gap-3">
+                            {{-- Icône et description à gauche --}}
                             <div class="flex-grow-1">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge text-bg-primary">{{ $evenement->minute }}'</span>
-                                    <span class="badge
-                                        @if($evenement->type === 'goal') text-bg-success
-                                        @elseif($evenement->type === 'yellow_card') text-bg-warning
-                                        @elseif($evenement->type === 'red_card') text-bg-danger
-                                        @else text-bg-secondary
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if($evenement->type === 'goal')
+                                        <span style="font-size: 1.2em;">⚽</span>
+                                    @elseif($evenement->type === 'yellow_card')
+                                        <span class="badge text-bg-warning" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">⚠</span>
+                                    @elseif($evenement->type === 'red_card')
+                                        <span class="badge text-bg-danger" style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; padding: 0;">🟥</span>
+                                    @elseif($evenement->type === 'substitution')
+                                        <span style="font-size: 1.1em;">🔄</span>
+                                    @endif
+
+                                    <span class="fw-semibold">
+                                        @if($evenement->type === 'goal')
+                                            {{ $evenement->description ?? 'BUT' }}
+                                        @else
+                                            {{ $evenement->description ?? ucfirst(str_replace('_', ' ', $evenement->type)) }}
                                         @endif
-                                    ">
-                                        {{ match($evenement->type) {
-                                            'goal' => 'BUT',
-                                            'yellow_card' => 'Carton jaune',
-                                            'red_card' => 'Carton rouge',
-                                            'substitution' => 'Remplacement',
-                                            default => $evenement->type,
-                                        } }}
                                     </span>
                                 </div>
-                                @if($evenement->description)
-                                    <div class="mt-1 small">{{ $evenement->description }}</div>
-                                @endif
+                            </div>
+
+                            {{-- Minute à droite --}}
+                            <div class="text-end" style="min-width: 50px;">
+                                <span class="badge text-bg-primary fw-bold">{{ $evenement->minute }}'</span>
                             </div>
                         </div>
                     </div>

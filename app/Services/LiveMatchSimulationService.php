@@ -14,8 +14,15 @@ class LiveMatchSimulationService
      */
     public function startLiveSimulation(MatchModel $match): void
     {
-        // Marquer le match comme "live"
-        $match->update(['statut' => 'live']);
+        // S'assurer que le match commence à 0-0 pour éviter des scores illogiques
+        $match->update([
+            'statut' => 'live',
+            'score_equipe_a' => 0,
+            'score_equipe_b' => 0,
+        ]);
+
+        // Supprimer les anciens événements si le match était déjà simulé
+        \App\Models\EvenementMatch::where('match_id', $match->id)->delete();
 
         // Stocker l'état de simulation dans le cache (expire après 60 secondes pour sécurité)
         $cacheKey = "live_simulation_match_{$match->id}";

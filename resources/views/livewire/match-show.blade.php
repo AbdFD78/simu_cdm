@@ -13,10 +13,22 @@
                 @endif
             </p>
         </div>
-        <a href="{{ route('poules.show', $match->poule ?? $match->phase?->poules->first()) }}"
-           class="btn btn-outline-secondary btn-sm">
-            &larr; Retour
-        </a>
+        @if($match->poule)
+            <a href="{{ route('poules.show', $match->poule) }}"
+               class="btn btn-outline-secondary btn-sm">
+                &larr; Retour
+            </a>
+        @elseif($match->phase)
+            <a href="{{ route('phases.show', $match->phase) }}"
+               class="btn btn-outline-secondary btn-sm">
+                &larr; Retour
+            </a>
+        @else
+            <a href="{{ route('phases.index') }}"
+               class="btn btn-outline-secondary btn-sm">
+                &larr; Retour
+            </a>
+        @endif
     </div>
 
     <div class="row g-4">

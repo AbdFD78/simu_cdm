@@ -16,6 +16,25 @@
     </div>
 
     @if($phase->type_phase === 'group')
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h5 mb-0">Phase de groupes</h2>
+
+            @php
+                $hasScheduled = $phase->poules->flatMap->matchs->where('statut', 'scheduled')->count() > 0;
+            @endphp
+
+            @if($hasScheduled)
+                <button type="button"
+                        class="btn btn-primary btn-sm"
+                        wire:click="simulateAllPoules"
+                        onclick="return confirm('Simuler tous les matchs de toutes les poules ?');">
+                    Simuler toutes les poules
+                </button>
+            @else
+                <span class="badge text-bg-success">Tous les matchs de groupes sont terminés</span>
+            @endif
+        </div>
+
         {{-- Liste des poules avec mini classement --}}
         <div class="row g-3">
             @forelse($phase->poules as $poule)
@@ -137,57 +156,90 @@
             @endforelse
         </div>
     @else
-        {{-- Liste des matchs de la phase à élimination directe --}}
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Matchs de la phase</h2>
+        {{-- Affichage type tableau (bracket) pour les phases à élimination directe --}}
+        @php
+            $total = $matchs->count();
+            $half = (int) ceil($total / 2);
+            $leftMatches = $matchs->slice(0, $half);
+            $rightMatches = $matchs->slice($half)->values();
+        @endphp
 
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle mb-0">
-                        <thead>
-                        <tr>
-                            <th>Match</th>
-                            <th class="text-center">Score</th>
-                            <th class="text-center">Statut</th>
-                            <th class="text-center">Date / heure</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @forelse($matchs as $match)
-                            <tr>
-                                <td>
-                                    {{ $match->equipeA->nom ?? 'Équipe A' }}
-                                    vs
-                                    {{ $match->equipeB->nom ?? 'Équipe B' }}
-                                </td>
-                                <td class="text-center">
-                                    {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge text-bg-secondary text-capitalize">
-                                        {{ $match->statut }}
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    {{ optional($match->date_heure)->format('d/m/Y H:i') ?? '—' }}
-                                </td>
-                                <td class="text-end">
-                                    <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-sm">
+        <div class="row g-3">
+            <div class="col-12 mb-2">
+                <h2 class="h5 mb-0">Tableau des matchs</h2>
+                <p class="text-muted small mb-0">
+                    Visualisation en mode bracket inspirée d'un arbre de tournoi. Chaque carton représente un match.
+                </p>
+            </div>
+
+            <div class="col-12 col-lg-6">
+                @forelse($leftMatches as $match)
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ $match->equipeA->nom ?? 'Équipe A' }}
+                                        <span class="text-muted">vs</span>
+                                        {{ $match->equipeB->nom ?? 'Équipe B' }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">
+                                        {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
+                                    </div>
+                                    <div class="small">
+                                        <span class="badge text-bg-secondary text-capitalize">
+                                            {{ $match->statut }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-xs mt-1">
                                         Détail
                                     </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">
-                                    Aucun match n'est encore planifié pour cette phase.
-                                </td>
-                            </tr>
-                        @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-muted">Aucun match n'est encore planifié pour cette phase.</p>
+                @endforelse
+            </div>
+
+            <div class="col-12 col-lg-6">
+                @foreach($rightMatches as $match)
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ $match->equipeA->nom ?? 'Équipe A' }}
+                                        <span class="text-muted">vs</span>
+                                        {{ $match->equipeB->nom ?? 'Équipe B' }}
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ optional($match->date_heure)->format('d/m/Y H:i') ?? 'Date à définir' }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold">
+                                        {{ $match->score_equipe_a }}&nbsp;-&nbsp;{{ $match->score_equipe_b }}
+                                    </div>
+                                    <div class="small">
+                                        <span class="badge text-bg-secondary text-capitalize">
+                                            {{ $match->statut }}
+                                        </span>
+                                    </div>
+                                    <a href="{{ route('matchs.show', $match) }}" class="btn btn-outline-primary btn-xs mt-1">
+                                        Détail
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     @endif

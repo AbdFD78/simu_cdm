@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\KnockoutBracket;
 use App\Livewire\MatchShow;
 use App\Livewire\PhaseList;
 use App\Livewire\PhaseShow;
@@ -12,6 +13,9 @@ Route::redirect('/', '/phases');
 // Phases
 Route::get('/phases', PhaseList::class)->name('phases.index');
 Route::get('/phases/{phase}', PhaseShow::class)->name('phases.show');
+
+// Tableau des phases finales
+Route::get('/tableau-final', KnockoutBracket::class)->name('knockout.bracket');
 
 // Poules
 Route::get('/poules/{poule}', PouleShow::class)->name('poules.show');

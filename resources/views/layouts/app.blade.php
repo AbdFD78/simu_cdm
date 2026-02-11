@@ -33,6 +33,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('phases.index') }}">Phases</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('knockout.bracket') }}">Tableau final</a>
+                    </li>
                 </ul>
             </div>
         </div>

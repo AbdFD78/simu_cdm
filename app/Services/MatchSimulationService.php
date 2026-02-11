@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Classement;
 use App\Models\EvenementMatch;
 use App\Models\MatchModel;
+use App\Models\Phase;
 use App\Models\Poule;
 use Illuminate\Support\Facades\DB;
 
@@ -12,7 +13,7 @@ class MatchSimulationService
 {
     /**
      * Simule tous les matchs d'une poule qui sont encore "scheduled".
-     * Génère des scores aléatoires et des événements cohérents.
+     * Génère des scores aléatoires et des événements cohérents instantanément.
      */
     public function simulatePoule(Poule $poule): void
     {
@@ -28,6 +29,42 @@ class MatchSimulationService
 
             // Recalculer les classements de la poule
             $this->recalculateClassements($poule);
+
+            // Vérifier si toutes les poules sont terminées et générer les seizièmes automatiquement
+            $knockoutService = app(\App\Services\KnockoutGenerationService::class);
+            if ($knockoutService->areAllGroupMatchesFinished()) {
+                $knockoutService->generateSeiziemesDeFinale();
+            }
+        });
+    }
+
+    /**
+     * Simule tous les matchs \"scheduled\" d'une phase donnée (utile pour les seizièmes, huitièmes, etc.).
+     */
+    public function simulatePhase(Phase $phase): void
+    {
+        DB::transaction(function () use ($phase) {
+            $matchs = MatchModel::where('phase_id', $phase->id)
+                ->where('statut', 'scheduled')
+                ->with(['equipeA', 'equipeB'])
+                ->get();
+
+            foreach ($matchs as $match) {
+                $this->simulateMatch($match);
+            }
+
+            // Générer automatiquement la phase suivante si tous les matchs sont terminés
+            $knockoutService = app(\App\Services\KnockoutGenerationService::class);
+            
+            if ($phase->nom === 'Seizièmes de finale' && $knockoutService->areAllPhaseMatchesFinished('Seizièmes de finale')) {
+                $knockoutService->generateHuitiemesDeFinale();
+            } elseif ($phase->nom === 'Huitièmes de finale' && $knockoutService->areAllPhaseMatchesFinished('Huitièmes de finale')) {
+                $knockoutService->generateQuartsDeFinale();
+            } elseif ($phase->nom === 'Quarts de finale' && $knockoutService->areAllPhaseMatchesFinished('Quarts de finale')) {
+                $knockoutService->generateDemisDeFinale();
+            } elseif ($phase->nom === 'Demi-finales' && $knockoutService->areAllPhaseMatchesFinished('Demi-finales')) {
+                $knockoutService->generateFinale();
+            }
         });
     }
 
@@ -83,38 +120,64 @@ class MatchSimulationService
      */
     private function generateEventsForMatch(MatchModel $match, int $scoreA, int $scoreB): void
     {
-        // Générer les buts pour l'équipe A
+        $events = [];
+
+        // Générer les buts pour l'équipe A (avec minutes triées)
         for ($i = 0; $i < $scoreA; $i++) {
-            $minute = rand(1, 90);
-            EvenementMatch::create([
+            $events[] = [
                 'match_id' => $match->id,
-                'minute' => $minute,
+                'minute' => rand(1, 90),
                 'type' => 'goal',
                 'description' => 'BUT - ' . ($match->equipeA->nom ?? 'Équipe A'),
-            ]);
+            ];
         }
 
         // Générer les buts pour l'équipe B
         for ($i = 0; $i < $scoreB; $i++) {
-            $minute = rand(1, 90);
-            EvenementMatch::create([
+            $events[] = [
                 'match_id' => $match->id,
-                'minute' => $minute,
+                'minute' => rand(1, 90),
                 'type' => 'goal',
                 'description' => 'BUT - ' . ($match->equipeB->nom ?? 'Équipe B'),
-            ]);
+            ];
         }
 
-        // Ajouter quelques cartons jaunes aléatoires (probabilité ~30%)
-        if (rand(1, 100) <= 30) {
-            $minute = rand(1, 90);
-            $equipe = rand(0, 1) === 0 ? $match->equipeA : $match->equipeB;
-            EvenementMatch::create([
+        // Ajouter des cartons jaunes (probabilité ~60% par match)
+        if (rand(1, 100) <= 60) {
+            $events[] = [
                 'match_id' => $match->id,
-                'minute' => $minute,
+                'minute' => rand(1, 90),
                 'type' => 'yellow_card',
-                'description' => 'Carton jaune - ' . ($equipe->nom ?? 'Équipe'),
-            ]);
+                'description' => 'Carton jaune - ' . (rand(0, 1) === 0 ? ($match->equipeA->nom ?? 'Équipe A') : ($match->equipeB->nom ?? 'Équipe B')),
+            ];
+        }
+
+        // Ajouter un carton rouge occasionnel (probabilité ~20%)
+        if (rand(1, 100) <= 20) {
+            $events[] = [
+                'match_id' => $match->id,
+                'minute' => rand(1, 90),
+                'type' => 'red_card',
+                'description' => 'Carton rouge - ' . (rand(0, 1) === 0 ? ($match->equipeA->nom ?? 'Équipe A') : ($match->equipeB->nom ?? 'Équipe B')),
+            ];
+        }
+
+        // Ajouter des remplacements (probabilité ~50%, généralement en seconde période)
+        if (rand(1, 100) <= 50) {
+            $events[] = [
+                'match_id' => $match->id,
+                'minute' => rand(45, 85),
+                'type' => 'substitution',
+                'description' => 'Remplacement - ' . (rand(0, 1) === 0 ? ($match->equipeA->nom ?? 'Équipe A') : ($match->equipeB->nom ?? 'Équipe B')),
+            ];
+        }
+
+        // Trier les événements par minute avant insertion
+        usort($events, fn($a, $b) => $a['minute'] <=> $b['minute']);
+
+        // Insérer tous les événements
+        foreach ($events as $event) {
+            EvenementMatch::create($event);
         }
     }
 
