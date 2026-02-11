@@ -1,4 +1,25 @@
 <div>
+    @php
+        $flagClasses = [
+            'MEX' => 'fi-mx', 'RSA' => 'fi-za', 'KOR' => 'fi-kr', 'DEN' => 'fi-dk',
+            'CAN' => 'fi-ca', 'QAT' => 'fi-qa', 'SUI' => 'fi-ch', 'ITA' => 'fi-it',
+            'BRA' => 'fi-br', 'MAR' => 'fi-ma', 'HAI' => 'fi-ht', 'SCO' => 'fi-gb',
+            'USA' => 'fi-us', 'PAR' => 'fi-py', 'AUS' => 'fi-au', 'TUR' => 'fi-tr',
+            'GER' => 'fi-de', 'CUW' => 'fi-cw', 'CIV' => 'fi-ci', 'ECU' => 'fi-ec',
+            'NED' => 'fi-nl', 'JPN' => 'fi-jp', 'TUN' => 'fi-tn', 'UKR' => 'fi-ua',
+            'BEL' => 'fi-be', 'EGY' => 'fi-eg', 'IRN' => 'fi-ir', 'NZL' => 'fi-nz',
+            'ESP' => 'fi-es', 'CPV' => 'fi-cv', 'KSA' => 'fi-sa', 'URU' => 'fi-uy',
+            'BOL' => 'fi-bo', 'FRA' => 'fi-fr', 'SEN' => 'fi-sn', 'NOR' => 'fi-no',
+            'ARG' => 'fi-ar', 'ALG' => 'fi-dz', 'AUT' => 'fi-at', 'JOR' => 'fi-jo',
+            'NCL' => 'fi-nc', 'POR' => 'fi-pt', 'UZB' => 'fi-uz', 'COL' => 'fi-co',
+            'ENG' => 'fi-gb', 'CRO' => 'fi-hr', 'GHA' => 'fi-gh', 'PAN' => 'fi-pa',
+        ];
+        $isBarrageA = $match->equipeA && str_contains($match->equipeA->nom ?? '', '/');
+        $isBarrageB = $match->equipeB && str_contains($match->equipeB->nom ?? '', '/');
+        $flagA = !$isBarrageA && $match->equipeA && $match->equipeA->code_pays ? ($flagClasses[$match->equipeA->code_pays] ?? null) : null;
+        $flagB = !$isBarrageB && $match->equipeB && $match->equipeB->code_pays ? ($flagClasses[$match->equipeB->code_pays] ?? null) : null;
+    @endphp
+
     @if($match->statut === 'live' || $isSimulating)
         {{-- Activer le polling toutes les 5 secondes quand le match est en cours --}}
         <div wire:poll.5s="updateMatch">
@@ -29,7 +50,14 @@
         <div class="text-center py-3 border rounded bg-light">
             <div class="row align-items-center">
                 <div class="col-5">
-                    <div class="fw-bold">{{ $match->equipeA->nom ?? 'Équipe A' }}</div>
+                    <div class="fw-bold">
+                        @if($isBarrageA)
+                            <span class="me-2" title="Barrages">⚔️</span>
+                        @elseif($flagA)
+                            <span class="fi {{ $flagA }} me-2"></span>
+                        @endif
+                        {{ $match->equipeA->nom ?? 'Équipe A' }}
+                    </div>
                 </div>
                 <div class="col-2">
                     <div class="display-6 fw-bold">
@@ -37,7 +65,14 @@
                     </div>
                 </div>
                 <div class="col-5">
-                    <div class="fw-bold">{{ $match->equipeB->nom ?? 'Équipe B' }}</div>
+                    <div class="fw-bold">
+                        @if($isBarrageB)
+                            <span class="me-2" title="Barrages">⚔️</span>
+                        @elseif($flagB)
+                            <span class="fi {{ $flagB }} me-2"></span>
+                        @endif
+                        {{ $match->equipeB->nom ?? 'Équipe B' }}
+                    </div>
                 </div>
             </div>
         </div>

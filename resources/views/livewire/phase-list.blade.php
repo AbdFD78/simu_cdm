@@ -5,7 +5,7 @@
         <button type="button"
                 class="btn btn-outline-danger btn-sm"
                 wire:click="resetCompetition"
-                onclick="return confirm('Réinitialiser toute la compétition ? Tous les scores et événements seront perdus.');">
+                wire:confirm="Réinitialiser toute la compétition ? Tous les scores et événements seront perdus.">
             Réinitialiser la compétition
         </button>
     </div>
@@ -148,13 +148,29 @@
         </div>
     @endif
 
+    @php
+        $phaseColors = [
+            'Phase de groupes' => ['bg' => 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)', 'border' => '#0a58ca', 'text' => '#fff'],
+            'Seizièmes de finale' => ['bg' => 'linear-gradient(135deg, #8b0000 0%, #6b0000 100%)', 'border' => '#6b0000', 'text' => '#fff'],
+            'Huitièmes de finale' => ['bg' => 'linear-gradient(135deg, #d2691e 0%, #a0522d 100%)', 'border' => '#a0522d', 'text' => '#fff'],
+            'Quarts de finale' => ['bg' => 'linear-gradient(135deg, #ff8c00 0%, #cc7000 100%)', 'border' => '#cc7000', 'text' => '#fff'],
+            'Demi-finales' => ['bg' => 'linear-gradient(135deg, #dc3545 0%, #b02a37 100%)', 'border' => '#b02a37', 'text' => '#fff'],
+            'Petite finale' => ['bg' => 'linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%)', 'border' => '#5a32a3', 'text' => '#fff'],
+            'Finale' => ['bg' => 'linear-gradient(135deg, #ffc107 0%, #d4a005 100%)', 'border' => '#d4a005', 'text' => '#212529'],
+        ];
+    @endphp
+
     <div class="row g-3">
         @forelse($phases as $phase)
+            @php
+                $style = $phaseColors[$phase->nom] ?? ['bg' => 'linear-gradient(135deg, #6c757d 0%, #495057 100%)', 'border' => '#495057', 'text' => '#fff'];
+            @endphp
             <div class="col-12 col-md-6 col-lg-4">
-                <a href="{{ route('phases.show', $phase) }}" class="text-decoration-none text-dark d-block h-100">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body d-flex flex-column justify-content-center">
-                            <h2 class="h5 card-title mb-0">{{ $phase->nom }}</h2>
+                <a href="{{ route('phases.show', $phase) }}" class="text-decoration-none d-block h-100 phase-card-link">
+                    <div class="card h-100 shadow-sm border-0 phase-card"
+                         style="background: {{ $style['bg'] }}; color: {{ $style['text'] }}; border-left: 4px solid {{ $style['border'] }} !important; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <div class="card-body d-flex flex-column justify-content-center py-4">
+                            <h2 class="h5 card-title mb-0 fw-bold">{{ $phase->nom }}</h2>
                         </div>
                     </div>
                 </a>

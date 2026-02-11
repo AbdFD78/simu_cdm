@@ -20,7 +20,8 @@
     {{-- Barre de navigation principale --}}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ route('phases.index') }}">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ route('phases.index') }}">
+                <span style="font-size: 1.4em; line-height: 1;" aria-hidden="true">🏆</span>
                 CDM 2026
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
