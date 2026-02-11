@@ -15,11 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Utilisateur de test (optionnel)
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+        ]);
+
+        // Données Coupe du Monde 2026
+        $this->call([
+            PhaseSeeder::class,
+            PouleSeeder::class,
+            EquipeSeeder::class,
+            MatchPouleSeeder::class,
         ]);
     }
 }
